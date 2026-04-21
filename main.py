@@ -1,53 +1,49 @@
-import time
 from turtle import Screen
-from snake import Snake
-from food import Food
+from paddle import Paddle
+from ball import Ball
+import time
 from scoreboard import Scoreboard
 
 screen = Screen()
-screen.setup(width=600, height=600)
+screen.setup(width=800, height=600)
 screen.bgcolor("black")
-screen.title("My Snake Game")
+screen.title("Pong Game")
 screen.tracer(0)
 
-snake = Snake()
-food = Food()
+r_paddle = Paddle((350, 0))
+l_paddle = Paddle((-350, 0))
+ball = Ball()
 scoreboard = Scoreboard()
 
 screen.listen()
-screen.onkey(snake.up, "Up")
-screen.onkey(snake.down, "Down")
-screen.onkey(snake.left, "Left")
-screen.onkey(snake.right, "Right")
+screen.onkey(key="Up", fun=r_paddle.go_up)
+screen.onkey(key="Down", fun=r_paddle.go_down)
+screen.onkey(key="w", fun=l_paddle.go_up)
+screen.onkey(key="s", fun=l_paddle.go_down)
 
 
 game_is_on = True
 while game_is_on:
+    time.sleep(ball.move_speed)
     screen.update()
-    time.sleep(0.11)
+    ball.move()
 
-    snake.move()
+    #detect the collision with wall
+    if ball.ycor() > 280 or ball.ycor() < -280:
+        ball.bounce_y()
 
-    #detect collision with food....
-    if snake.head.distance(food) < 15:
-        food.refresh()
-        snake.extend()
-        scoreboard.increase_score()
-
-    #detect collision with wall
-    if snake.head.xcor() > 280 or snake.head.xcor() < -280 or snake.head.ycor() > 280 or snake.head.ycor() < -280:
-        game_is_on = False
-        scoreboard.game_over()
+    #collision with right paddle
+    if ball.distance(r_paddle) < 50 and ball.xcor() > 320 or ball.distance(l_paddle) < 50 and ball.xcor() < -320:
+        ball.bounce_x()
 
 
-    #detect collision with tail
-    for segment in snake.segments[1:]:
-        if snake.head.distance(segment) < 10:
-            game_is_on = False
-            scoreboard.game_over()
+    #detect when right paddle misses
+    if ball.xcor() > 380:
+        ball.reset_position()
+        scoreboard.l_point()
 
-    #if head collides with any segments in the tail:
-    #trigger game over
-
+    if ball.xcor() < -380:
+        ball.reset_position()
+        scoreboard.r_point()
 
 screen.exitonclick()
